@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assinatura Digital — Rescisão de Contrato</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+  body{background:#f2f5f3;min-height:100vh;padding:24px 16px;color:#222;}
+  .box{max-width:600px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:28px 24px;}
+  h1{font-size:19px;color:#1a5c3a;margin-bottom:4px;}
+  .sub{font-size:13px;color:#777;margin-bottom:20px;}
+  .campo{background:#f8faf9;border:1.5px solid #e0e6e2;border-radius:8px;padding:10px 14px;margin-bottom:14px;}
+  .campo-label{font-size:10.5px;color:#888;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
+  .campo-val{font-size:15px;font-weight:700;color:#1a3a2a;}
+  .btn-doc{display:inline-flex;align-items:center;gap:8px;background:#1565c0;color:#fff;text-decoration:none;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:700;margin-bottom:20px;}
+  label.cpf-label{display:block;font-size:12.5px;font-weight:700;color:#444;margin-bottom:5px;}
+  input#cpf{width:100%;padding:10px 12px;border:1.5px solid #d5dbd7;border-radius:8px;font-size:14px;margin-bottom:16px;}
+  .sig-wrap{border:1.5px dashed #b7c2bb;border-radius:10px;padding:10px;margin-bottom:8px;background:#fbfcfb;}
+  canvas{width:100%;height:160px;background:#fff;border-radius:6px;touch-action:none;cursor:crosshair;border:1px solid #e0e6e2;}
+  .sig-actions{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .sig-actions button{background:none;border:none;color:#1565c0;font-size:12.5px;cursor:pointer;}
+  .declaro{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#555;margin:16px 0;line-height:1.5;}
+  .declaro input{margin-top:3px;}
+  .btn-confirmar{width:100%;background:#1a5c3a;color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-confirmar:disabled{background:#b9c4bd;cursor:not-allowed;}
+  .ok-msg{text-align:center;padding:40px 10px;}
+  .ok-msg .icon{font-size:52px;margin-bottom:12px;}
+  .ok-msg h2{color:#1a5c3a;margin-bottom:8px;}
+  .ok-msg p{color:#666;font-size:14px;}
+  .erro-msg{background:#fdecea;color:#c0392b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+  .rh-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px;}
+  .rh-table th,.rh-table td{border:1px solid #e0e6e2;padding:6px 8px;text-align:left;}
+  .rh-table th{background:#f0f4f1;}
+  .modo-tabs{display:flex;gap:8px;margin:18px 0 14px;}
+  .modo-tab{flex:1;padding:10px 8px;border:1.5px solid #d5dbd7;border-radius:8px;background:#f8faf9;color:#555;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .modo-tab.active{background:#1a5c3a;color:#fff;border-color:#1a5c3a;}
+  .tag-rec{display:block;font-size:9.5px;font-weight:400;opacity:.85;margin-top:2px;}
+  .aviso-govbr{background:#e8f5ee;border:1px solid #b7ddc6;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#1a5c3a;margin-bottom:14px;line-height:1.5;}
+  .passos-govbr{margin:0 0 14px 18px;font-size:13px;color:#444;line-height:1.9;}
+  .passos-govbr a{color:#1565c0;font-weight:700;}
+  .upload-govbr{border:1.5px dashed #b7c2bb;border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#666;cursor:pointer;background:#fbfcfb;margin-bottom:8px;}
+  .upload-govbr.tem-arquivo{border-color:#1a5c3a;color:#1a5c3a;font-weight:700;background:#f0f7f3;}
+</style>
+</head>
+<body>
+<div class="box" id="candidateSection">
+  <h1>📄 Assinatura Digital — Rescisão de Contrato</h1>
+  <div class="sub">Equilibryum Especialidades Médicas &amp; Terapêuticas</div>
+
+  <div class="campo">
+    <div class="campo-label">Funcionário(a)</div>
+    <div class="campo-val" id="nomeDisplay">—</div>
+  </div>
+
+  <a href="#" id="btnAbrirDoc" class="btn-doc" target="_blank">📎 Baixar/abrir o documento (RCT/TRCT)</a>
+
+  <div class="modo-tabs">
+    <button type="button" class="modo-tab active" id="tabGovbr" onclick="selecionarModo('govbr')">✅ Assinar com gov.br <span class="tag-rec">recomendado</span></button>
+    <button type="button" class="modo-tab" id="tabSimples" onclick="selecionarModo('simples')">✍️ Assinatura simples</button>
+  </div>
+
+  <div class="erro-msg" id="erroMsg"></div>
+
+  <!-- MODO GOV.BR -->
+  <div id="modoGovbr">
+    <div class="aviso-govbr">A assinatura pelo gov.br usa a sua conta e identidade verificadas pelo governo — tem validade jurídica mais forte que uma assinatura simples desenhada na tela.</div>
+    <ol class="passos-govbr">
+      <li>Baixe o documento no botão acima, se ainda não baixou.</li>
+      <li>Acesse o <a href="https://assinador.iti.br/" target="_blank">Assinador gov.br</a> (site oficial do governo), envie o PDF e assine com a sua conta gov.br.</li>
+      <li>Depois de assinado, baixe o PDF assinado e envie ele aqui embaixo.</li>
+    </ol>
+    <a href="https://assinador.iti.br/" target="_blank" class="btn-doc" style="background:#1a5c3a;">🔗 Abrir o Assinador gov.br</a>
+
+    <label class="cpf-label">Confirme seu CPF *</label>
+    <input type="text" id="cpfGovbr" placeholder="000.000.000-00">
+
+    <label class="cpf-label">Envie o PDF já assinado pelo gov.br *</label>
+    <div class="upload-govbr" id="uploadGovbrArea">
+      <div id="uploadGovbrTexto">📎 Clique para selecionar o PDF assinado</div>
+      <input type="file" id="arquivoGovbr" accept=".pdf" style="display:none;" onchange="arquivoGovbrSelecionado()">
+    </div>
+
+    <div class="declaro">
+      <input type="checkbox" id="declaroGovbr">
+      <label for="declaroGovbr">Declaro que recebi e li o documento de Rescisão de Contrato de Trabalho (RCT/TRCT), e o PDF enviado acima é a via assinada por mim através do gov.br.</label>
+    </div>
+
+    <button class="btn-confirmar" id="btnConfirmarGovbr" onclick="enviarAssinaturaGovbr()" disabled>✅ Enviar PDF Assinado</button>
+  </div>
+
+  <!-- MODO SIMPLES -->
+  <div id="modoSimples" style="display:none;">
+    <label class="cpf-label">Confirme seu CPF *</label>
+    <input type="text" id="cpf" placeholder="000.000.000-00">
+
+    <label class="cpf-label">Assine no campo abaixo (com o dedo ou mouse) *</label>
+    <div class="sig-wrap">
+      <canvas id="sigCanvas"></canvas>
+      <div class="sig-actions">
+        <span style="font-size:11.5px;color:#999;">Use o dedo (celular) ou o mouse</span>
+        <button type="button" onclick="limparAssinatura()">🗑️ Limpar</button>
+      </div>
+    </div>
+
+    <div class="declaro">
+      <input type="checkbox" id="declaro">
+      <label for="declaro">Declaro que recebi e li o documento de Rescisão de Contrato de Trabalho (RCT/TRCT) anexado, e estou de acordo com os termos nele apresentados. Esta assinatura eletrônica tem validade para fins de comprovação de recebimento e ciência.</label>
+    </div>
+
+    <button class="btn-confirmar" id="btnConfirmar" onclick="enviarAssinatura()" disabled>✅ Confirmar Assinatura</button>
+  </div>
+</div>
+
+<div class="box" id="okSection" style="display:none;">
+  <div class="ok-msg">
+    <div class="icon">✅</div>
+    <h2>Assinatura registrada!</h2>
+    <p>Obrigado. Sua assinatura foi enviada com sucesso ao RH da Equilibryum.</p>
+  </div>
+</div>
+
+<div class="box" id="rhPanel" style="display:none;">
+  <h1>📋 Painel RH — Assinaturas de RCT</h1>
+  <div class="sub">Lista de rescisões já assinadas digitalmente.</div>
+  <p id="rhStatus">Carregando...</p>
+  <table class="rh-table" id="rhTable" style="display:none;">
+    <thead><tr><th>Data/Hora</th><th>Nome</th><th>CPF</th><th>Método</th><th>Documento</th></tr></thead>
+    <tbody id="rhBody"></tbody>
+  </table>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylqfuGULHqhkYgLHNmeJ4Gqiq_UR_vyKMKu0ixv4Rj1giZ4Zi5RYLqnfx_o2CNLfvKhw/exec';
+
+const params = new URLSearchParams(location.search);
+const idParam   = params.get('id')   || '';
+const nomeParam = params.get('nome') || '';
+const rctParam  = params.get('rct')  || '';
+
+document.getElementById('nomeDisplay').textContent = nomeParam || '—';
+document.getElementById('btnAbrirDoc').href = rctParam || '#';
+if (!rctParam) document.getElementById('btnAbrirDoc').style.display = 'none';
+
+// ---- Assinatura (canvas) ----
+const canvas = document.getElementById('sigCanvas');
+const ctx = canvas.getContext('2d');
+let desenhando = false, temTraco = false;
+
+function ajustarCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2,2);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1a3a2a';
+}
+window.addEventListener('resize', ajustarCanvas);
+ajustarCanvas();
+
+function pos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  return {x:cx, y:cy};
+}
+function iniciar(e) { desenhando = true; temTraco = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); atualizarBotao(); e.preventDefault(); }
+function mover(e) { if(!desenhando) return; const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+function parar() { desenhando = false; }
+canvas.addEventListener('mousedown', iniciar);
+canvas.addEventListener('mousemove', mover);
+window.addEventListener('mouseup', parar);
+canvas.addEventListener('touchstart', iniciar);
+canvas.addEventListener('touchmove', mover);
+canvas.addEventListener('touchend', parar);
+
+function limparAssinatura() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  temTraco = false;
+  atualizarBotao();
+}
+
+document.getElementById('declaro').addEventListener('change', atualizarBotao);
+document.getElementById('cpf').addEventListener('input', atualizarBotao);
+function atualizarBotao() {
+  const cpfOk = document.getElementById('cpf').value.replace(/\D/g,'').length >= 11;
+  const declOk = document.getElementById('declaro').checked;
+  document.getElementById('btnConfirmar').disabled = !(cpfOk && declOk && temTraco);
+}
+
+function mostrarErro(msg) {
+  const el = document.getElementById('erroMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ---- Seleção de modo: gov.br (recomendado) ou assinatura simples ----
+function selecionarModo(modo) {
+  document.getElementById('tabGovbr').classList.toggle('active', modo === 'govbr');
+  document.getElementById('tabSimples').classList.toggle('active', modo === 'simples');
+  document.getElementById('modoGovbr').style.display = modo === 'govbr' ? 'block' : 'none';
+  document.getElementById('modoSimples').style.display = modo === 'simples' ? 'block' : 'none';
+}
+
+// ---- Modo gov.br: upload do PDF já assinado ----
+let arquivoGovbrSelecionadoObj = null;
+document.getElementById('uploadGovbrArea').addEventListener('click', function(){ document.getElementById('arquivoGovbr').click(); });
+function arquivoGovbrSelecionado() {
+  const inp = document.getElementById('arquivoGovbr');
+  const file = inp.files && inp.files[0];
+  arquivoGovbrSelecionadoObj = file || null;
+  const area = document.getElementById('uploadGovbrArea');
+  const texto = document.getElementById('uploadGovbrTexto');
+  if (file) { texto.textContent = '📎 ' + file.name; area.classList.add('tem-arquivo'); }
+  else { texto.textContent = '📎 Clique para selecionar o PDF assinado'; area.classList.remove('tem-arquivo'); }
+  atualizarBotaoGovbr();
+}
+document.getElementById('declaroGovbr').addEventListener('change', atualizarBotaoGovbr);
+document.getElementById('cpfGovbr').addEventListener('input', atualizarBotaoGovbr);
+function atualizarBotaoGovbr() {
+  const cpfOk = document.getElementById('cpfGovbr').value.replace(/\D/g,'').length >= 11;
+  const declOk = document.getElementById('declaroGovbr').checked;
+  document.getElementById('btnConfirmarGovbr').disabled = !(cpfOk && declOk && arquivoGovbrSelecionadoObj);
+}
+
+function lerArquivoComoBase64(file) {
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(reader.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function enviarAssinaturaGovbr() {
+  var btn = document.getElementById('btnConfirmarGovbr');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var base64 = await lerArquivoComoBase64(arquivoGovbrSelecionadoObj);
+    var payload = {
+      id: idParam,
+      nome: nomeParam,
+      cpf: document.getElementById('cpfGovbr').value,
+      metodo: 'gov.br',
+      arquivoAssinadoBase64: base64,
+      arquivoNome: arquivoGovbrSelecionadoObj.name
+    };
+    await fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) });
+    document.getElementById('candidateSection').style.display = 'none';
+    document.getElementById('okSection').style.display = 'block';
+  } catch(err) {
+    mostrarErro('Não foi possível enviar o PDF assinado. Verifique sua internet e tente novamente.');
+    btn.disabled = false; btn.textContent = '✅ Enviar PDF Assinado';
+  }
+}
+
+async function enviarAssinatura() {
+  var btn = document.getElementById('btnConfirmar');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var payload = {
+      id: idParam,
+      nome: nomeParam,
+      cpf: document.getElementById('cpf').value,
+      metodo: 'simples',
+      assinaturaImg: canvas.toDataURL('image/png')
+    };
+    await fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) });
+    document.getElementById('candidateSection').style.display = 'none';
+    document.getElementById('okSection').style.display = 'block';
+  } catch(err) {
+    mostrarErro('Não foi possível enviar a assinatura. Verifique sua internet e tente novamente.');
+    btn.disabled = false; btn.textContent = '✅ Confirmar Assinatura';
+  }
+}
+
+// ---- Painel RH ----
+const RH_ACCESS_KEY = 'equilibryum-rh2026';
+const isRHMode = params.get('painel') === RH_ACCESS_KEY;
+if (isRHMode) {
+  document.getElementById('candidateSection').style.display = 'none';
+  document.getElementById('rhPanel').style.display = 'block';
+  fetch(APPS_SCRIPT_URL + '?mode=list')
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      var status = document.getElementById('rhStatus');
+      var tbody = document.getElementById('rhBody');
+      if (!rows || !rows.length) { status.textContent = 'Nenhuma assinatura registrada ainda.'; return; }
+      status.style.display = 'none';
+      document.getElementById('rhTable').style.display = 'table';
+      rows.forEach(function(row){
+        var tr = document.createElement('tr');
+        var dataFmt = row.Timestamp ? new Date(row.Timestamp).toLocaleString('pt-BR') : '';
+        var metodoTxt = row['Método'] === 'gov.br' ? '✅ gov.br' : '✍️ Simples';
+        tr.innerHTML = '<td>'+dataFmt+'</td><td>'+(row.Nome||'')+'</td><td>'+(row.CPF||'')+'</td><td>'+metodoTxt+'</td><td>'+(row['Link Assinatura'] ? '<a href="'+row['Link Assinatura']+'" target="_blank">Ver</a>' : '—')+'</td>';
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(function(){ document.getElementById('rhStatus').textContent = 'Não foi possível carregar as assinaturas. Confira se a URL do Apps Script foi configurada corretamente.'; });
+}
+</script>
+</body>
+</html>
